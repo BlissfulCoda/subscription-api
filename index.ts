@@ -1,6 +1,8 @@
 import { env } from "./config/env.js";
 import express, { type Request, type Response } from "express";
 
+import connectDatabase from "./database/neondb.js";
+
 import subscriptionRouter from "./routes/subscription.routes.js";
 import userRouter from "./routes/user.routes.js";
 import authRouter from "./routes/auth.routes.js";
@@ -17,8 +19,9 @@ server.get("/", (req: Request, res: Response) => {
   res.send(`Welcome to Express`);
 });
 
-server.listen(env.PORT, () =>
+server.listen(env.PORT, async () => {
+  await connectDatabase();
   console.log(
     `Subscription API server is running on port: http://localhost:${String(PORT)} (${environment})`,
-  ),
-);
+  );
+});

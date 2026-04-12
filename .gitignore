@@ -71,3 +71,5 @@ build/
 # This project uses pnpm; ignore other lockfiles so installs stay consistent
 package-lock.json
 yarn.lock
+
+/generated/prisma

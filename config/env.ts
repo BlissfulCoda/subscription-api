@@ -14,7 +14,10 @@ config({ path: resolve(root, `.env.${NODE_ENV}.local`), override: true });
 
 process.env.NODE_ENV = NODE_ENV;
 
+const DATABASE_URL = process.env.DATABASE_URL;
+
 export const env = {
   NODE_ENV,
   PORT: Number(process.env.PORT) || 5500,
+  DATABASE_URL,
 } as const;
