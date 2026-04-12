@@ -56,6 +56,17 @@ typings/
 
 # dotenv environment variables file
 .env
+.env.*
+!.env.example
 
-# next.js build output
-.next
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# OS / editor noise
+.DS_Store
+
+# This project uses pnpm; ignore other lockfiles so installs stay consistent
+package-lock.json
+yarn.lock
