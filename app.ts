@@ -1,7 +1,12 @@
 import express, { type Request, type Response } from "express";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
 
 import { errorMiddleware } from "./middleware/error.middleware.js";
+import {
+  apiRateLimiter,
+  authRateLimiter,
+} from "./middleware/rateLimit.middleware.js";
 import authRouter from "./routes/auth.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
 import userRouter from "./routes/user.routes.js";
@@ -10,6 +15,7 @@ import userRouter from "./routes/user.routes.js";
 export function createApp() {
   const app = express();
 
+  app.use(helmet());
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
@@ -22,9 +28,9 @@ export function createApp() {
     res.send("subscription-api");
   });
 
-  app.use("/api/v1/auth", authRouter);
-  app.use("/api/v1/subscriptions", subscriptionRouter);
-  app.use("/api/v1/users", userRouter);
+  app.use("/api/v1/auth", authRateLimiter, authRouter);
+  app.use("/api/v1/subscriptions", apiRateLimiter, subscriptionRouter);
+  app.use("/api/v1/users", apiRateLimiter, userRouter);
 
   app.use(errorMiddleware);
 

@@ -7,15 +7,17 @@ License: [MIT](LICENSE).
 ## Current scope
 
 - **Layered env** (`.env` + `.env.<development|production>.local`) via `config/env.ts`
-- **Neon + Prisma** with `@prisma/adapter-neon`; in **Node** the Neon serverless driver needs the **`ws`** WebSocket implementation (`neonConfig.webSocketConstructor` in `database/neondb.ts`). Prisma CLI uses `DIRECT_URL` when set (`prisma.config.ts`)
+- **Neon + Prisma** with `@prisma/adapter-neon`; in **Node** the Neon serverless driver needs the **`ws`** WebSocket implementation (`neonConfig.webSocketConstructor` in `database/neondb.ts`). Prisma CLI uses `DIRECT_URL` when set (`prisma.config.ts`); **`Subscription`** uses **`@@index([userId])`** and **`@@index([userId, status])`** for typical list/filter access patterns
 - **`POST /api/v1/users`**: Zod validation → **bcryptjs** password hash → `prisma.user.create` → duplicate email → **409**
 - **`POST /api/v1/auth/sign-in`**, **`POST /api/v1/auth/sign-up`**: Zod → bcrypt verify / create → **JWT** access token; **`POST /api/v1/auth/sign-out`**: stateless ack (client discards token)
+- **Security defaults:** [**Helmet**](https://helmetjs.github.io/) for common HTTP headers; [**express-rate-limit**](https://github.com/express-rate-limit/express-rate-limit) — stricter window on **`/api/v1/auth`**, broader cap on other **`/api/v1/*`** routes (limits are skipped when **`VITEST=true`** so CI/tests stay deterministic)
+- **User reads (authz):** **`GET /api/v1/users/me`** (requires **`Authorization: Bearer <token>`**); **`GET /api/v1/users/:id`** is **self-only** (token subject must match `:id`); **`GET /api/v1/users`** returns **403** — no open user directory (admin/tenant listing would be a separate, scoped capability)
 - **Global JSON error shape** + **`express.json()`** + **`GET /health`**
 - **Subscription routes**: scaffolded; full lifecycle and rules still to be built
 
 ## Roadmap
 
-- Refresh tokens, server-side session revocation, password reset
+- Refresh tokens, server-side session revocation, password reset; **distributed rate limiting** (e.g. Redis) if the API runs multiple instances
 - Stripe (or other) billing and webhooks
 - Background jobs for renewals / status reconciliation
 
@@ -65,6 +67,7 @@ Quick local routes:
 - **Health:** `GET /health`
 - **Register user:** `POST /api/v1/users` with JSON `{ "name", "email", "password" }`
 - **Auth:** `POST /api/v1/auth/sign-in`, `POST /api/v1/auth/sign-up`, `POST /api/v1/auth/sign-out` (see `routes/auth.routes.ts`)
+- **Current user (JWT):** `GET /api/v1/users/me` with header `Authorization: Bearer <access_token>`
 
 Example with HTTPie after `pnpm dev`:
 
@@ -72,6 +75,8 @@ Example with HTTPie after `pnpm dev`:
 http GET localhost:5500/health
 http POST localhost:5500/api/v1/users name="Alice" email="alice@example.com" password="secret12"
 http POST localhost:5500/api/v1/auth/sign-in email="alice@example.com" password="secret12"
+# copy access_token from JSON, then:
+http GET localhost:5500/api/v1/users/me "Authorization: Bearer <paste_token_here>"
 ```
 
 ## Scripts
@@ -89,6 +94,7 @@ http POST localhost:5500/api/v1/auth/sign-in email="alice@example.com" password=
 - **`app.ts`** — `createApp()` (HTTP stack only; used in tests)
 - **`index.ts`** — connects DB, then `listen`
 - **`routes/`** — HTTP adapters (thin)
+- **`middleware/`** — errors, **`requireAuth`**, rate limiting
 - **`services/`** — use-cases (e.g. `createUser`)
 - **`models/`** — Zod schemas + small domain helpers
 - **`prisma/schema.prisma`** — database model

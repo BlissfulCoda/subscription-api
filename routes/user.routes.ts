@@ -1,33 +1,22 @@
-import {
-  Router,
-  type Request,
-  type Response,
-  type NextFunction,
-} from "express";
+import { Router, type Request, type Response } from "express";
 
-import { createUser } from "../services/user.service.js";
+import {
+  getMe,
+  getUser,
+  getUsers,
+  postUser,
+} from "../controllers/users.controllers.js";
+import { requireAuth } from "../middleware/auth.middleware.js";
 
 const userRouter = Router();
 
-userRouter.get("/", (_req: Request, res: Response) =>
-  res.send({ title: "GET all users" }),
-);
+userRouter.post("/", postUser);
 
-userRouter.get("/:id", (req: Request, res: Response) =>
-  res.send({ title: "GET user info", id: req.params.id }),
-);
+userRouter.get("/me", requireAuth, getMe);
 
-userRouter.post(
-  "/",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { user } = await createUser(req.body);
-      res.status(201).json({ data: user });
-    } catch (e) {
-      next(e);
-    }
-  },
-);
+userRouter.get("/", getUsers);
+
+userRouter.get("/:id", requireAuth, getUser);
 
 userRouter.put("/:id", (req: Request, res: Response) =>
   res.send({ title: "UPDATE user", id: req.params.id }),
