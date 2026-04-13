@@ -4,16 +4,16 @@ REST API for subscription-style data: **Express**, **TypeScript**, **Prisma 7**,
 
 License: [MIT](LICENSE).
 
-## Implemented today
+## Current scope
 
 - **Layered env** (`.env` + `.env.<development|production>.local`) via `config/env.ts`
 - **Neon + Prisma** with `@prisma/adapter-neon`; in **Node** the Neon serverless driver needs the **`ws`** WebSocket implementation (`neonConfig.webSocketConstructor` in `database/neondb.ts`). Prisma CLI uses `DIRECT_URL` when set (`prisma.config.ts`)
 - **`POST /api/v1/users`**: Zod validation → **bcryptjs** password hash → `prisma.user.create` → duplicate email → **409**
 - **`POST /api/v1/auth/sign-in`**, **`POST /api/v1/auth/sign-up`**: Zod → bcrypt verify / create → **JWT** access token; **`POST /api/v1/auth/sign-out`**: stateless ack (client discards token)
 - **Global JSON error shape** + **`express.json()`** + **`GET /health`**
-- **Subscription routes**: mostly stubs
+- **Subscription routes**: scaffolded; full lifecycle and rules still to be built
 
-## Not implemented yet (roadmap)
+## Roadmap
 
 - Refresh tokens, server-side session revocation, password reset
 - Stripe (or other) billing and webhooks
