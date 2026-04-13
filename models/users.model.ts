@@ -18,3 +18,13 @@ export const userCreateSchema = z.object({
 });
 
 export type UserCreateInput = z.infer<typeof userCreateSchema>;
+
+/** Sign-in: do not reuse register password rules (avoids leaking policy before auth). */
+export const userSignInSchema = z.object({
+  email: userCreateSchema.shape.email,
+  password: z
+    .string({ required_error: "Password is required" })
+    .min(1, "Password is required"),
+});
+
+export type UserSignInInput = z.infer<typeof userSignInSchema>;

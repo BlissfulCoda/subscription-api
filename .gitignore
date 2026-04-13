@@ -67,6 +67,8 @@ build/
 
 # OS / editor noise
 .DS_Store
+
+# Cursor IDE — local rules, prompts, machine config. Do NOT commit (not for GitHub / recruiters).
 .cursor/
 
 # This project uses pnpm; ignore other lockfiles so installs stay consistent

@@ -1,7 +1,11 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { AppError } from "../lib/httpErrors.js";
-import { isPrismaUniqueViolation } from "../lib/prismaErrors.js";
+import { logRequestError } from "../lib/logRequestError.js";
+import {
+  isPrismaTableDoesNotExist,
+  isPrismaUniqueViolation,
+} from "../lib/prismaErrors.js";
 
 
 export const errorMiddleware: ErrorRequestHandler = (
@@ -48,7 +52,19 @@ export const errorMiddleware: ErrorRequestHandler = (
     return;
   }
 
-  console.error(err);
+  if (isPrismaTableDoesNotExist(err)) {
+    res.status(503).json({
+      error: {
+        code: "SCHEMA_NOT_APPLIED",
+        message:
+          "Database tables are missing. Apply migrations: `pnpm exec prisma migrate deploy` (uses DIRECT_URL; see README).",
+        details: err.meta,
+      },
+    });
+    return;
+  }
+
+  logRequestError(err);
   res.status(500).json({
     error: {
       code: "INTERNAL_ERROR",

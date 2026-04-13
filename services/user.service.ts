@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../database/neondb.js";
-import { ConflictError } from "../lib/httpErrors.js";
+import { AppError, ConflictError } from "../lib/httpErrors.js";
 import { isPrismaUniqueViolation } from "../lib/prismaErrors.js";
-import { userCreateSchema } from "../models/users.model.js";
+import { userCreateSchema, userSignInSchema } from "../models/users.model.js";
 
 const BCRYPT_COST = 12;
 
@@ -29,6 +29,31 @@ function toPublicUser(row: {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
+}
+
+export async function signInUser(
+  body: unknown,
+): Promise<{ user: PublicUser }> {
+  const input = userSignInSchema.parse(body);
+  const row = await prisma.user.findUnique({
+    where: { email: input.email },
+  });
+  if (!row) {
+    throw new AppError(
+      401,
+      "UNAUTHORIZED",
+      "Invalid email or password.",
+    );
+  }
+  const passwordOk = await bcrypt.compare(input.password, row.password);
+  if (!passwordOk) {
+    throw new AppError(
+      401,
+      "UNAUTHORIZED",
+      "Invalid email or password.",
+    );
+  }
+  return { user: toPublicUser(row) };
 }
 
 export async function createUser(
