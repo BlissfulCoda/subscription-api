@@ -2,23 +2,38 @@ import { Router, type Request, type Response } from "express";
 
 const authRouter = Router();
 
-// authRouter.get("/", (req: Request, res: Response) =>
-//   res.json({
-//     message: "Auth API",
-//     endpoints: ["/sign-in", "/sign-up", "/sign-out"],
-//   }),
-// );
-
-authRouter.get("/sign-in", (req: Request, res: Response) =>
-  res.json({ message: "Sign In" }),
+authRouter.get("/", (_req: Request, res: Response) =>
+  res.json({
+    message: "Auth API",
+    endpoints: ["POST /sign-in", "POST /sign-up", "DELETE /sign-out"],
+  }),
 );
 
-authRouter.get("/sign-up", (req: Request, res: Response) =>
-  res.json({ message: "Sign up" }),
+authRouter.post("/sign-in", (_req: Request, res: Response) =>
+  res.status(501).json({
+    error: {
+      code: "NOT_IMPLEMENTED",
+      message: "Sign-in is not implemented yet.",
+    },
+  }),
 );
 
-authRouter.get("/sign-out", (req: Request, res: Response) =>
-  res.json({ message: "Sign out" }),
+authRouter.post("/sign-up", (_req: Request, res: Response) =>
+  res.status(501).json({
+    error: {
+      code: "NOT_IMPLEMENTED",
+      message: "Auth sign-up is not implemented; use POST /api/v1/users to register.",
+    },
+  }),
+);
+
+authRouter.delete("/sign-out", (_req: Request, res: Response) =>
+  res.status(501).json({
+    error: {
+      code: "NOT_IMPLEMENTED",
+      message: "Sign-out is not implemented yet.",
+    },
+  }),
 );
 
 export default authRouter;

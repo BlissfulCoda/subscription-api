@@ -2,36 +2,37 @@ import { Router, type Request, type Response } from "express";
 
 const subscriptionRouter = Router();
 
-subscriptionRouter.get("/", (req: Request, res: Response) =>
+subscriptionRouter.get("/", (_req: Request, res: Response) =>
   res.send({ title: "GET all subscriptions" }),
 );
 
-subscriptionRouter.get("/:id", (req: Request, res: Response) =>
-  res.send({ title: "GET subscription details" }),
-);
-
-subscriptionRouter.post("/", (req: Request, res: Response) =>
-  res.send({ title: "CREATE a subscription" }),
-);
-
-subscriptionRouter.put("/", (req: Request, res: Response) =>
-  res.send({ title: "UPDATE a subscription" }),
-);
-
-subscriptionRouter.delete("/", (req: Request, res: Response) =>
-  res.send({ title: "DELETE a subscription" }),
+/** Static paths must be registered before `/:id` so `user` is not captured as an id. */
+subscriptionRouter.get("/upcoming-renewals", (_req: Request, res: Response) =>
+  res.send({ title: "GET upcoming subscription renewals" }),
 );
 
 subscriptionRouter.get("/user/:id", (req: Request, res: Response) =>
-  res.send({ title: "GET all user subscriptions" }),
+  res.send({ title: "GET all user subscriptions", userId: req.params.id }),
+);
+
+subscriptionRouter.post("/", (_req: Request, res: Response) =>
+  res.send({ title: "CREATE a subscription" }),
 );
 
 subscriptionRouter.put("/:id/cancel", (req: Request, res: Response) =>
-  res.send({ title: "CANCEL a subscription" }),
+  res.send({ title: "CANCEL a subscription", id: req.params.id }),
 );
 
-subscriptionRouter.put("/upcoming-renewals", (req: Request, res: Response) =>
-  res.send({ title: "GET upcoming subscription renewals" }),
+subscriptionRouter.get("/:id", (req: Request, res: Response) =>
+  res.send({ title: "GET subscription details", id: req.params.id }),
+);
+
+subscriptionRouter.put("/:id", (req: Request, res: Response) =>
+  res.send({ title: "UPDATE a subscription", id: req.params.id }),
+);
+
+subscriptionRouter.delete("/:id", (req: Request, res: Response) =>
+  res.send({ title: "DELETE a subscription", id: req.params.id }),
 );
 
 export default subscriptionRouter;

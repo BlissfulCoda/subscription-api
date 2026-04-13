@@ -67,6 +67,7 @@ build/
 
 # OS / editor noise
 .DS_Store
+.cursor/
 
 # This project uses pnpm; ignore other lockfiles so installs stay consistent
 package-lock.json

@@ -21,10 +21,10 @@ if (env.NODE_ENV !== "production") {
 async function connectDatabase(): Promise<void> {
   try {
     await prisma.$connect();
-
     console.log(`Connected to database in ${env.NODE_ENV} mode`);
   } catch (error) {
-    console.log("Error connecting to the database", error);
+    console.error("Failed to connect to the database", error);
+    throw error;
   }
 }
 

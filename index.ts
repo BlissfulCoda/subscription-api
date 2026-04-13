@@ -1,27 +1,21 @@
+import { createApp } from "./app.js";
 import { env } from "./config/env.js";
-import express, { type Request, type Response } from "express";
-
 import connectDatabase from "./database/neondb.js";
 
-import subscriptionRouter from "./routes/subscription.routes.js";
-import userRouter from "./routes/user.routes.js";
-import authRouter from "./routes/auth.routes.js";
+const app = createApp();
 
-const server = express();
-const PORT: number = Number(env.PORT) || 8080;
-const environment: string = env.NODE_ENV;
-
-server.use("/api/v1/auth", authRouter);
-server.use("/api/v1/subscriptions", subscriptionRouter);
-server.use("/api/v1/users", userRouter);
-
-server.get("/", (req: Request, res: Response) => {
-  res.send(`Welcome to Express`);
-});
-
-server.listen(env.PORT, async () => {
+async function main(): Promise<void> {
   await connectDatabase();
-  console.log(
-    `Subscription API server is running on port: http://localhost:${String(PORT)} (${environment})`,
-  );
+  app.listen(env.PORT, () => {
+    console.log(
+      `Subscription API listening on http://localhost:${String(env.PORT)} (${env.NODE_ENV})`,
+    );
+  });
+}
+
+main().catch((err: unknown) => {
+  console.error("Server failed to start", err);
+  process.exit(1);
 });
+
+

@@ -7,11 +7,14 @@
     "start": "cross-env NODE_ENV=production tsx index.ts",
     "dev": "cross-env NODE_ENV=development tsx watch index.ts",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@prisma/adapter-neon": "^7.7.0",
     "@prisma/client": "^7.7.0",
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "dotenv": "^16.5.0",
@@ -23,13 +26,16 @@
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/node": "^22.15.3",
+    "@types/supertest": "^7.2.0",
     "cross-env": "^7.0.3",
     "eslint": "^10.2.0",
     "globals": "^17.5.0",
     "jiti": "^2.6.1",
     "prisma": "^7.7.0",
+    "supertest": "^7.1.0",
     "tsx": "^4.19.3",
     "typescript": "~5.8.3",
-    "typescript-eslint": "^8.58.1"
+    "typescript-eslint": "^8.58.1",
+    "vitest": "^3.1.1"
   }
 }

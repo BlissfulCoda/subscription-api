@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - run: pnpm install
+
+      - run: pnpm run typecheck
+
+      - run: pnpm run lint
+
+      - name: Prisma validate
+        run: pnpm exec prisma validate
+        env:
+          DATABASE_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
+          DIRECT_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
+
+      - name: Prisma generate
+        run: pnpm exec prisma generate
+        env:
+          DATABASE_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
+          DIRECT_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
+
+      - run: pnpm test
+        env:
+          DATABASE_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
+          DIRECT_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable

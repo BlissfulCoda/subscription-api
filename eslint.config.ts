@@ -10,5 +10,11 @@ export default defineConfig([
     extends: ["js/recommended"],
     languageOptions: { globals: globals.node },
   },
+  {
+    files: ["tests/**/*.ts", "vitest.config.ts"],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.vitest },
+    },
+  },
   tseslint.configs.recommended,
 ]);
