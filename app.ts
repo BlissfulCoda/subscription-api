@@ -4,14 +4,13 @@ import helmet from "helmet";
 
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import {
-  apiRateLimiter,
-  authRateLimiter,
-} from "./middleware/rateLimit.middleware.js";
+  arcjetApiLimiter,
+  arcjetAuthLimiter,
+} from "./middleware/arcjet.middleware.js";
 import authRouter from "./routes/auth.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
 import userRouter from "./routes/user.routes.js";
 
-/** Builds the HTTP app (no listen, no DB connect) — used in production and in tests. */
 export function createApp() {
   const app = express();
 
@@ -28,9 +27,9 @@ export function createApp() {
     res.send("subscription-api");
   });
 
-  app.use("/api/v1/auth", authRateLimiter, authRouter);
-  app.use("/api/v1/subscriptions", apiRateLimiter, subscriptionRouter);
-  app.use("/api/v1/users", apiRateLimiter, userRouter);
+  app.use("/api/v1/auth", arcjetAuthLimiter, authRouter);
+  app.use("/api/v1/subscriptions", arcjetApiLimiter, subscriptionRouter);
+  app.use("/api/v1/users", arcjetApiLimiter, userRouter);
 
   app.use(errorMiddleware);
 

@@ -1,4 +1,3 @@
-/** Typed HTTP errors for handlers and services — mapped by {@link errorMiddleware}. */
 export class AppError extends Error {
   constructor(
     public readonly statusCode: number,

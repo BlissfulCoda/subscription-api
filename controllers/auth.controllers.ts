@@ -33,7 +33,11 @@ export const signUp = async (
 export const signOut = async (
   _req: Request,
   res: Response,
-  _next: NextFunction,
+  next: NextFunction,
 ): Promise<void> => {
-  res.status(200).json({ data: { signedOut: true } });
+  try {
+    res.status(200).json({ data: { signedOut: true } });
+  } catch (e) {
+    next(e);
+  }
 };

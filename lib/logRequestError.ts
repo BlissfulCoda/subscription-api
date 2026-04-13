@@ -10,7 +10,6 @@ function logAggregateError(agg: AggregateError, label: string): void {
   });
 }
 
-/** Rich server logs — `ErrorEvent` from Neon/WebSocket often prints empty with `console.error(err)` alone. */
 export function logRequestError(err: unknown): void {
   if (err instanceof AggregateError) {
     logAggregateError(err, "[AggregateError]");

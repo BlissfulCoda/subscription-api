@@ -10,10 +10,6 @@ if (!env.DATABASE_URL) {
   );
 }
 
-/**
- * Neon’s serverless driver turns `DATABASE_URL` into a `wss://…` endpoint. If the host is
- * `localhost`, you get `wss://localhost/v2` and `ECONNREFUSED` — a common mis-copy from local Postgres templates.
- */
 function assertNeonDatabaseHost(url: string): void {
   if (process.env.VITEST === "true") return;
 
@@ -35,7 +31,6 @@ function assertNeonDatabaseHost(url: string): void {
 
 assertNeonDatabaseHost(env.DATABASE_URL);
 
-/** Required in Node for Neon's serverless driver (otherwise queries can fail with a bare `ErrorEvent`). */
 neonConfig.webSocketConstructor = WebSocket;
 
 const adapter = new PrismaNeon({ connectionString: env.DATABASE_URL });
@@ -51,7 +46,6 @@ if (env.NODE_ENV !== "production") {
 async function connectDatabase(): Promise<void> {
   try {
     await prisma.$connect();
-    /** Opens the Neon WebSocket path; `$connect` alone can succeed before the first query. */
     await prisma.$queryRawUnsafe("SELECT 1");
     console.log(`Connected to database in ${env.NODE_ENV} mode`);
   } catch (error) {

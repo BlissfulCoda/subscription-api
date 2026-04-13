@@ -15,11 +15,12 @@ config({ path: resolve(root, `.env.${NODE_ENV}.local`), override: true });
 process.env.NODE_ENV = NODE_ENV;
 
 const DATABASE_URL = process.env.DATABASE_URL;
-/** Neon direct host (no `-pooler`) — for Prisma CLI / migrations; optional at runtime. */
 const DIRECT_URL = process.env.DIRECT_URL;
 // JWT
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
+const ARCJET_KEY_RAW = process.env.ARCJET_KEY?.trim();
+const ARCJET_KEY = ARCJET_KEY_RAW && ARCJET_KEY_RAW.length > 0 ? ARCJET_KEY_RAW : undefined;
 
 export const env = {
   NODE_ENV,
@@ -28,4 +29,5 @@ export const env = {
   DIRECT_URL,
   JWT_SECRET,
   JWT_EXPIRES_IN,
+  ARCJET_KEY,
 } as const;

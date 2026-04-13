@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** Mirrors your Mongoose rules: Prisma holds columns + `@unique`; this holds messages + trim/lowercase/format. */
 export const userCreateSchema = z.object({
   name: z
     .string({ required_error: "User Name is required" })
@@ -19,7 +18,6 @@ export const userCreateSchema = z.object({
 
 export type UserCreateInput = z.infer<typeof userCreateSchema>;
 
-/** Sign-in: do not reuse register password rules (avoids leaking policy before auth). */
 export const userSignInSchema = z.object({
   email: userCreateSchema.shape.email,
   password: z

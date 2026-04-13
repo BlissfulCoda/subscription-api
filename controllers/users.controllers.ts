@@ -6,19 +6,20 @@ import {
 } from "../services/user.service.js";
 import { AppError } from "../lib/httpErrors.js";
 
-/** Intentionally disabled: open user listing is a privacy and abuse risk without admin/tenant scoping. */
 export const getUsers = (
   _req: Request,
   _res: Response,
   next: NextFunction,
 ): void => {
-  next(
-    new AppError(
+  try {
+    throw new AppError(
       403,
       "FORBIDDEN",
       "Listing all users is not enabled (would require elevated access in production).",
-    ),
-  );
+    );
+  } catch (e) {
+    next(e);
+  }
 };
 
 export const getMe = async (

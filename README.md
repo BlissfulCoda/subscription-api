@@ -6,18 +6,18 @@ License: [MIT](LICENSE).
 
 ## Current scope
 
-- **Layered env** (`.env` + `.env.<development|production>.local`) via `config/env.ts`
-- **Neon + Prisma** with `@prisma/adapter-neon`; in **Node** the Neon serverless driver needs the **`ws`** WebSocket implementation (`neonConfig.webSocketConstructor` in `database/neondb.ts`). Prisma CLI uses `DIRECT_URL` when set (`prisma.config.ts`); **`Subscription`** uses **`@@index([userId])`** and **`@@index([userId, status])`** for typical list/filter access patterns
-- **`POST /api/v1/users`**: Zod validation → **bcryptjs** password hash → `prisma.user.create` → duplicate email → **409**
-- **`POST /api/v1/auth/sign-in`**, **`POST /api/v1/auth/sign-up`**: Zod → bcrypt verify / create → **JWT** access token; **`POST /api/v1/auth/sign-out`**: stateless ack (client discards token)
-- **Security defaults:** [**Helmet**](https://helmetjs.github.io/) for common HTTP headers; [**express-rate-limit**](https://github.com/express-rate-limit/express-rate-limit) — stricter window on **`/api/v1/auth`**, broader cap on other **`/api/v1/*`** routes (limits are skipped when **`VITEST=true`** so CI/tests stay deterministic)
-- **User reads (authz):** **`GET /api/v1/users/me`** (requires **`Authorization: Bearer <token>`**); **`GET /api/v1/users/:id`** is **self-only** (token subject must match `:id`); **`GET /api/v1/users`** returns **403** — no open user directory (admin/tenant listing would be a separate, scoped capability)
-- **Global JSON error shape** + **`express.json()`** + **`GET /health`**
-- **Subscription routes**: scaffolded; full lifecycle and rules still to be built
+- **Env:** `.env` plus `.env.<development|production>.local` (`config/env.ts`)
+- **Data:** Prisma 7 + Neon (`@prisma/adapter-neon`, `ws` in `database/neondb.ts`); optional `DIRECT_URL` for Prisma CLI (`prisma.config.ts`)
+- **`POST /api/v1/users`:** Zod → bcrypt hash → create user; duplicate email → **409**
+- **Auth:** sign-in / sign-up → JWT; sign-out is client-side token discard
+- **HTTP:** Helmet, JSON body parser, shared error JSON, **`GET /health`**
+- **Rate limits:** optional Arcjet token-bucket (tighter on `/api/v1/auth`, looser on other `/api/v1/*`); no key or `VITEST=true` → middleware skips
+- **Users API:** `GET /api/v1/users/me` and self-only `GET /api/v1/users/:id` with Bearer JWT; list-all users → **403**
+- **Subscriptions:** routes scaffolded only
 
 ## Roadmap
 
-- Refresh tokens, server-side session revocation, password reset; **distributed rate limiting** (e.g. Redis) if the API runs multiple instances
+- Refresh tokens, server-side session revocation, password reset; optional **extra** app-level limits (e.g. Redis) if you outgrow Arcjet defaults or need custom cross-service quotas
 - Stripe (or other) billing and webhooks
 - Background jobs for renewals / status reconciliation
 
@@ -35,9 +35,10 @@ License: [MIT](LICENSE).
 | `DIRECT_URL` | Direct Neon URL (no `-pooler`) for **`prisma migrate`** / `db push` — optional at runtime |
 | `JWT_SECRET` | Secret for signing access tokens (**required** for auth routes in real runs) |
 | `JWT_EXPIRES_IN` | Optional token lifetime (e.g. `7d`, `3600`); defaults to **`7d`** if unset or empty |
+| `ARCJET_KEY` | Optional — enables Arcjet token-bucket rate limiting; omit for local/CI without Arcjet |
 | `NODE_ENV` | `development` \| `production` — set by `pnpm dev` / `pnpm start` |
 
-Copy `.env.example` patterns into `.env` and `.env.development.local` as needed.
+Copy `.env.example` patterns into `.env` and `.env.development.local` as needed. Arcjet is token-bucket only (`middleware/arcjet.middleware.ts`); omit `ARCJET_KEY` to run without it, or replace with an in-process limiter if you prefer.
 
 ## Setup
 
@@ -54,13 +55,13 @@ For **local schema iteration** you can use `pnpm exec prisma migrate dev` instea
 
 ### GitHub Actions
 
-CI reads **`DATABASE_URL`** (and optional **`DIRECT_URL`**) from repository [**Variables**](https://docs.github.com/en/actions/learn-github-actions/variables) or [**Secrets**](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions). The workflow prefers `secrets.*` when set, otherwise `vars.*`. Use a **Secret** if the URL contains a password.
+CI loads `DATABASE_URL` (and optional `DIRECT_URL`) from repo Variables or Secrets (`secrets.*` wins over `vars.*`). Prefer Secrets when the URL includes credentials.
 
-**Fork pull requests:** GitHub does not pass repository secrets to workflows from forks by default, so CI may fail on external forks unless you adjust workflow permissions or use a non-secret test strategy. Pushes to branches in **this** repo are unaffected.
+Fork PRs from other users often cannot read your secrets, so CI may fail there unless you change permissions or use a dedicated test setup. `pnpm test` sets `VITEST=true`, so Arcjet middleware does not run in tests even if `ARCJET_KEY` is set.
 
 ## Trying the API
 
-Use **Postman**, **Insomnia**, **curl**, **[HTTPie](https://httpie.io/)**, or any HTTP client you like. Base URL: `http://localhost:<PORT>` (see `PORT` in your env).
+Use any HTTP client. Base URL: `http://localhost:<PORT>` (default **5500** if `PORT` is unset).
 
 Quick local routes:
 
@@ -94,7 +95,7 @@ http GET localhost:5500/api/v1/users/me "Authorization: Bearer <paste_token_here
 - **`app.ts`** — `createApp()` (HTTP stack only; used in tests)
 - **`index.ts`** — connects DB, then `listen`
 - **`routes/`** — HTTP adapters (thin)
-- **`middleware/`** — errors, **`requireAuth`**, rate limiting
+- **`middleware/`** — errors, **`requireAuth`**, Arcjet rate limits
 - **`services/`** — use-cases (e.g. `createUser`)
 - **`models/`** — Zod schemas + small domain helpers
 - **`prisma/schema.prisma`** — database model

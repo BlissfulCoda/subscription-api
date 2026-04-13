@@ -22,7 +22,6 @@ export function issueAccessToken(userId: number): string {
   );
 }
 
-/** Validates a Bearer access token; returns the authenticated user id (`sub` claim). */
 export function verifyAccessToken(token: string): number {
   if (!env.JWT_SECRET) {
     throw new AppError(

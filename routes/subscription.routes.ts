@@ -6,7 +6,6 @@ subscriptionRouter.get("/", (_req: Request, res: Response) =>
   res.send({ title: "GET all subscriptions" }),
 );
 
-/** Static paths must be registered before `/:id` so `user` is not captured as an id. */
 subscriptionRouter.get("/upcoming-renewals", (_req: Request, res: Response) =>
   res.send({ title: "GET upcoming subscription renewals" }),
 );

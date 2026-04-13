@@ -8,7 +8,6 @@ import {
   SubscriptionStatus as SubscriptionStatusValues,
 } from "../generated/prisma/enums.js";
 
-/** Same idea as Mongoose `renewalPeriods` + `setDate(getDate() + n)` — fixed day offsets, local calendar days. */
 const RENEWAL_PERIOD_DAYS: Record<BillingFrequency, number> = {
   [BillingFrequencyValues.DAILY]: 1,
   [BillingFrequencyValues.WEEKLY]: 7,
@@ -16,10 +15,6 @@ const RENEWAL_PERIOD_DAYS: Record<BillingFrequency, number> = {
   [BillingFrequencyValues.YEARLY]: 365,
 };
 
-/**
- * If `renewalDate` is omitted, mirror a `pre("save")` hook: copy `startDate` and add days by frequency.
- * Prisma has no Mongoose middleware — call this (or parse with `subscriptionCreateSchema`) before `create`.
- */
 export function calculateRenewalDate(
   start: Date,
   frequency: BillingFrequency,
@@ -30,7 +25,6 @@ export function calculateRenewalDate(
   return d;
 }
 
-/** Mongoose-style: if renewal is already past, force `EXPIRED`. Use on reads/updates too, not only on create. */
 export function resolveSubscriptionStatusByRenewal(
   renewalDate: Date,
   status: SubscriptionStatus,
@@ -80,16 +74,13 @@ const subscriptionCreateBase = z.object({
   category: zSubscriptionCategory,
   status: zSubscriptionStatus.default(SubscriptionStatusValues.ACTIVE),
   startDate: z.coerce.date(),
-  /** Omit to auto-fill from `startDate` + `frequency` via {@link calculateRenewalDate}. */
   renewalDate: z.coerce.date().optional(),
 });
 
-/** After defaulting `renewalDate`, all fields are known — explicit type fixes Zod chain inference under `tsc`. */
 type SubscriptionAfterRenewal = z.infer<typeof subscriptionCreateBase> & {
   renewalDate: Date;
 };
 
-/** Runtime checks + default renewal when omitted (no Prisma `pre("save")`). */
 export const subscriptionCreateSchema = subscriptionCreateBase
   .transform(
     (data): SubscriptionAfterRenewal => ({
@@ -121,5 +112,4 @@ export const subscriptionCreateSchema = subscriptionCreateBase
     status: resolveSubscriptionStatusByRenewal(data.renewalDate, data.status),
   }));
 
-/** Parsed payload ready for `prisma.subscription.create` (includes resolved `renewalDate` + `status`). */
 export type SubscriptionCreateInput = z.output<typeof subscriptionCreateSchema>;
