@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
-import { Prisma } from "../generated/prisma/client.js";
 import { AppError } from "../lib/httpErrors.js";
+import { isPrismaUniqueViolation } from "../lib/prismaErrors.js";
 
 
 export const errorMiddleware: ErrorRequestHandler = (
@@ -37,10 +37,7 @@ export const errorMiddleware: ErrorRequestHandler = (
     return;
   }
 
-  if (
-    err instanceof Prisma.PrismaClientKnownRequestError &&
-    err.code === "P2002"
-  ) {
+  if (isPrismaUniqueViolation(err)) {
     res.status(409).json({
       error: {
         code: "CONFLICT",

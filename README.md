@@ -36,13 +36,30 @@ Copy `.env.example` patterns into `.env` and `.env.development.local` as needed.
 
 ```bash
 pnpm install
-pnpm exec prisma generate
+pnpm exec prisma generate   # required for `generated/prisma` (gitignored); `pnpm run typecheck` runs this too
 pnpm exec prisma migrate dev   # or: prisma db push
 pnpm dev
 ```
 
+`DATABASE_URL` / `DIRECT_URL` must be set (see above) so `prisma generate` and `prisma.config.ts` can load.
+
+### GitHub Actions
+
+CI reads **`DATABASE_URL`** (and optional **`DIRECT_URL`**) from repository [**Variables**](https://docs.github.com/en/actions/learn-github-actions/variables) or [**Secrets**](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions). The workflow prefers `secrets.*` when set, otherwise `vars.*`. Use a **Secret** if the URL contains a password.
+
 - **Health:** `GET http://localhost:<PORT>/health`
 - **Register user:** `POST /api/v1/users` with JSON `{ "name", "email", "password" }`
+
+## Trying the API
+
+Use **Postman**, **Insomnia**, **curl**, **[HTTPie](https://httpie.io/)**, or any HTTP client you like. Base URL: `http://localhost:<PORT>` (see `PORT` in your env).
+
+Example with HTTPie after `pnpm dev`:
+
+```bash
+http GET localhost:5500/health
+http POST localhost:5500/api/v1/users name="Alice" email="alice@example.com" password="secret12"
+```
 
 ## Scripts
 
@@ -50,7 +67,7 @@ pnpm dev
 |--------|-------------|
 | `pnpm dev` | Dev server with `NODE_ENV=development` |
 | `pnpm start` | Production mode entry |
-| `pnpm run typecheck` | `tsc --noEmit` |
+| `pnpm run typecheck` | `prisma generate` then `tsc --noEmit` |
 | `pnpm run lint` | ESLint |
 | `pnpm test` | Vitest + Supertest |
 

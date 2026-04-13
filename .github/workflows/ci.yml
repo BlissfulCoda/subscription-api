@@ -9,6 +9,11 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      # Repository Variables and/or Secrets (Settings → Secrets and variables → Actions).
+      # Prefer Secrets for URLs that include credentials; Variables are fine for public pooler URLs.
+      DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL || vars.DIRECT_URL || secrets.DATABASE_URL || vars.DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -23,23 +28,14 @@ jobs:
 
       - run: pnpm install
 
+      - name: Prisma validate
+        run: pnpm exec prisma validate
+
+      - name: Prisma generate
+        run: pnpm exec prisma generate
+
       - run: pnpm run typecheck
 
       - run: pnpm run lint
 
-      - name: Prisma validate
-        run: pnpm exec prisma validate
-        env:
-          DATABASE_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
-          DIRECT_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
-
-      - name: Prisma generate
-        run: pnpm exec prisma generate
-        env:
-          DATABASE_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
-          DIRECT_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
-
       - run: pnpm test
-        env:
-          DATABASE_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable
-          DIRECT_URL: postgresql://test:test@127.0.0.1:5432/testdb?sslmode=disable

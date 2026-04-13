@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
-import { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../database/neondb.js";
 import { ConflictError } from "../lib/httpErrors.js";
+import { isPrismaUniqueViolation } from "../lib/prismaErrors.js";
 import { userCreateSchema } from "../models/users.model.js";
 
 const BCRYPT_COST = 12;
@@ -46,11 +46,8 @@ export async function createUser(
       },
     });
     return { user: toPublicUser(user) };
-  } catch (e) {
-    if (
-      e instanceof Prisma.PrismaClientKnownRequestError &&
-      e.code === "P2002"
-    ) {
+  } catch (e: unknown) {
+    if (isPrismaUniqueViolation(e)) {
       const target = e.meta?.target;
       const isEmail =
         target !== undefined &&

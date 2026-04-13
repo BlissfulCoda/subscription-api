@@ -84,15 +84,22 @@ const subscriptionCreateBase = z.object({
   renewalDate: z.coerce.date().optional(),
 });
 
+/** After defaulting `renewalDate`, all fields are known — explicit type fixes Zod chain inference under `tsc`. */
+type SubscriptionAfterRenewal = z.infer<typeof subscriptionCreateBase> & {
+  renewalDate: Date;
+};
+
 /** Runtime checks + default renewal when omitted (no Prisma `pre("save")`). */
 export const subscriptionCreateSchema = subscriptionCreateBase
-  .transform((data) => ({
-    ...data,
-    renewalDate:
-      data.renewalDate ??
-      calculateRenewalDate(data.startDate, data.frequency),
-  }))
-  .superRefine((data, ctx) => {
+  .transform(
+    (data): SubscriptionAfterRenewal => ({
+      ...data,
+      renewalDate:
+        data.renewalDate ??
+        calculateRenewalDate(data.startDate, data.frequency),
+    }),
+  )
+  .superRefine((data: SubscriptionAfterRenewal, ctx) => {
     const now = new Date();
     if (data.startDate.getTime() > now.getTime()) {
       ctx.addIssue({
@@ -109,7 +116,7 @@ export const subscriptionCreateSchema = subscriptionCreateBase
       });
     }
   })
-  .transform((data) => ({
+  .transform((data: SubscriptionAfterRenewal) => ({
     ...data,
     status: resolveSubscriptionStatusByRenewal(data.renewalDate, data.status),
   }));

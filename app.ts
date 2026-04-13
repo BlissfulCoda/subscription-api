@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from "express";
+import cookieParser from "cookie-parser";
 
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import authRouter from "./routes/auth.routes.js";
@@ -10,6 +11,8 @@ export function createApp() {
   const app = express();
 
   app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
+  app.use(cookieParser());
 
   app.get("/health", (_req: Request, res: Response) => {
     res.status(200).json({ ok: true });
