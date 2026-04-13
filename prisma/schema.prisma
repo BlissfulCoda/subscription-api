@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -12,8 +10,68 @@ datasource db {
   provider = "postgresql"
 }
 
+// --- Enums (DB-level allowed values; messages + date rules → Zod in models/subscription.models.ts) ---
+
+enum Currency {
+  USD
+  EUR
+  GBP
+}
+
+enum BillingFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionCategory {
+  SPORTS
+  MUSIC
+  ENTERTAINMENT
+  LIFESTYLE
+  TECHNOLOGY
+  FINANCE
+  POLITICS
+  OTHERS
+}
+
+/// Your sketch called this `paymentMethod` but listed lifecycle values — modeled as `status`.
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
 model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
+  id            Int            @id @default(autoincrement())
+  name          String         @db.VarChar(50)
+  email         String         @unique @db.VarChar(255)
+  /// Store a hash (e.g. bcrypt), not plain text.
+  password      String         @db.VarChar(255)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id          Int                    @id @default(autoincrement())
+  name        String                 @db.VarChar(200)
+  /// Amount in the smallest currency unit (e.g. pence for GBP); enforce ranges in Zod if needed.
+  price       Int
+  currency    Currency               @default(GBP)
+  frequency   BillingFrequency
+  category    SubscriptionCategory
+  status      SubscriptionStatus     @default(ACTIVE)
+  startDate   DateTime
+  renewalDate DateTime
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, status])
 }
